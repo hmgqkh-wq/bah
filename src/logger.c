@@ -8,6 +8,7 @@
 #include <unistd.h>
 #include <time.h>
 #include <pthread.h>
+#include <stdlib.h>    // <-- FIXED: required for system()
 
 static pthread_mutex_t _log_mutex = PTHREAD_MUTEX_INITIALIZER;
 static FILE *g_main = NULL;
@@ -48,7 +49,6 @@ void xeno_open_log(void) {
         fprintf(g_main, "=== xeno log start: %s", ctime(&t));
         safe_fsync(g_main);
     } else {
-        /* fallback to Download */
         mkdir("/sdcard/Download", 0755);
         FILE *fb = fopen("/sdcard/Download/eden_wrapper_fallback_log.txt", "a");
         if (fb) {
@@ -59,75 +59,4 @@ void xeno_open_log(void) {
         }
     }
     pthread_mutex_unlock(&_log_mutex);
-}
-
-void xeno_log(const char *fmt, ...) {
-    pthread_mutex_lock(&_log_mutex);
-    if (!g_main) xeno_open_log();
-    if (!g_main) { pthread_mutex_unlock(&_log_mutex); return; }
-    va_list ap;
-    va_start(ap, fmt);
-    char buf[2048];
-    vsnprintf(buf, sizeof(buf), fmt, ap);
-    va_end(ap);
-    time_t t = time(NULL);
-    fprintf(g_main, "[%ld] %s\n", (long)t, buf);
-    safe_fsync(g_main);
-    pthread_mutex_unlock(&_log_mutex);
-}
-
-void xeno_log_event(const char *json) {
-    pthread_mutex_lock(&_log_mutex);
-    mkdirs_strict(PRIMARY_BASE);
-    char ev[1024];
-    snprintf(ev, sizeof(ev), "%s/events.json", PRI_EVENTS);
-    FILE *f = fopen(ev, "a");
-    if (f) {
-        time_t t = time(NULL);
-        fprintf(f, "{\"ts\":%ld,%s}\n", (long)t, json[0] ? json+1 : json); // ensure valid JSON line
-        fflush(f);
-        int fd = fileno(f);
-        if (fd >= 0) fsync(fd);
-        fclose(f);
-    }
-    /* mirror critical summary to main */
-    xeno_log("[EVENT] %.800s", json);
-    pthread_mutex_unlock(&_log_mutex);
-}
-
-void xeno_log_bin(const char *relpath, const void *data, size_t size) {
-    pthread_mutex_lock(&_log_mutex);
-    mkdirs_strict(PRIMARY_BASE);
-    char out[1024];
-    snprintf(out, sizeof(out), "%s/%s", PRIMARY_BASE, relpath);
-    /* create directories if needed */
-    char cmd[1200];
-    snprintf(cmd, sizeof(cmd), "mkdir -p $(dirname '%s')", out);
-    system(cmd);
-    FILE *f = fopen(out, "wb");
-    if (f) {
-        fwrite(data, 1, size, f);
-        fflush(f);
-        int fd = fileno(f);
-        if (fd >= 0) fsync(fd);
-        fclose(f);
-        xeno_log("WROTE_BIN %s size=%zu", out, size);
-    } else {
-        xeno_log("FAILED_WRITE_BIN %s", out);
-    }
-    pthread_mutex_unlock(&_log_mutex);
-}
-
-void xeno_flush_all(void) {
-    pthread_mutex_lock(&_log_mutex);
-    if (g_main) {
-        fflush(g_main);
-        safe_fsync(g_main);
-    }
-    pthread_mutex_unlock(&_log_mutex);
-}
-
-void xeno_init(void) {
-    xeno_open_log();
-    xeno_log("xeno_init (extreme) initialized");
 }
