@@ -1,0 +1,58 @@
+name: build-and-package
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Install build deps
+      run: sudo apt-get update && sudo apt-get install -y cmake gcc zip build-essential
+
+    - name: Configure & build
+      run: |
+        mkdir -p build
+        cd build
+        cmake ..
+        make -j$(nproc)
+
+    - name: Package Eden driver ZIP (exact layout)
+      run: |
+        PKG="your_wrapper.zip"
+        rm -f "$PKG"
+        mkdir -p eden_pkg/libs/arm64-v8a
+        mkdir -p eden_pkg/config
+
+        # find the built .so and ensure exact name in package
+        SO=$(find build -maxdepth 1 -type f -name "libvulkan.xeno_wrapper*.so" | head -n1)
+        if [ -z "$SO" ]; then
+          echo "ERROR: built .so not found"
+          ls -la build || true
+          exit 1
+        fi
+        cp "$SO" eden_pkg/libs/arm64-v8a/libvulkan.xeno_wrapper.so
+
+        # copy manifest and config files
+        cp manifest.json eden_pkg/ || true
+        cp config/debug.json eden_pkg/config/ || true
+        cp config/profile.json eden_pkg/config/ || true
+        cp config/logging_rules.json eden_pkg/config/ || true
+        cp config/vk_trace_config.json eden_pkg/config/ || true
+        cp config/shader_debug.json eden_pkg/config/ || true
+
+        (cd eden_pkg && zip -r "../$PKG" .)
+        echo "Package contents:"
+        unzip -l "$PKG"
+
+    - name: Upload artifact (ZIP)
+      uses: actions/upload-artifact@v4
+      with:
+        name: your_wrapper
+        path: your_wrapper.zip
