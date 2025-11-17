@@ -1,0 +1,14 @@
+{
+  "trace_calls": [
+    "vkEnumerateInstanceExtensionProperties",
+    "vkEnumerateDeviceExtensionProperties",
+    "vkGetPhysicalDeviceProperties",
+    "vkGetPhysicalDeviceQueueFamilyProperties",
+    "vkCreateShaderModule",
+    "vkQueueSubmit",
+    "vkQueuePresentKHR",
+    "vkCreateGraphicsPipelines",
+    "vkCreateComputePipelines"
+  ],
+  "trace_level": "extreme"
+}
