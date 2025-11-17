@@ -1,0 +1,7 @@
+{
+  "mode": "extreme",
+  "dump_spirv": true,
+  "dump_feature_json": true,
+  "force_sync_on_write": true,
+  "max_event_file_mb": 500
+}
