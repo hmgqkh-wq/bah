@@ -1,0 +1,15 @@
+{
+  "log_events": [
+    "proc_lookup",
+    "instance_extension",
+    "device_extension",
+    "physical_device_properties",
+    "queue_family",
+    "shader_module",
+    "queue_submit",
+    "present",
+    "pipeline_create"
+  ],
+  "event_sample_rate": 1,
+  "max_shaders_saved": 1000
+}
