@@ -1,0 +1,7 @@
+{
+  "name": "xclipse-940-collector-extreme",
+  "driver": "libvulkan.xeno_wrapper.so",
+  "entrypoint": "vkGetInstanceProcAddr",
+  "target": "vulkan1.3",
+  "notes": "Extreme collector for Phase-1. Produces detailed logs for Phase-2 final wrapper."
+}
