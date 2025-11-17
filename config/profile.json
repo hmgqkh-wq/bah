@@ -1,0 +1,5 @@
+{
+  "target": "xclipse-940",
+  "device_family": "exynos-2400e",
+  "notes": "Extreme collector profile for Phase-1 data collection"
+}
