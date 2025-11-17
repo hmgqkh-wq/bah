@@ -1,0 +1,5 @@
+{
+  "dump_spirv": true,
+  "spirv_output_dir": "/sdcard/eden_wrapper_logs/shader",
+  "spirv_max_keep": 2000
+}
